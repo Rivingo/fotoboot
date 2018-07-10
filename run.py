@@ -12,11 +12,11 @@ while(True) :
     ret, frame = cam.read()
     # Our operations on the frame come here
     gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-
+    gray = cv2.flip(gray, 1)
     # Display the resulting frame
     cv2.imshow('frame',gray)
     if cv2.waitKey(1) & 0xFF == ord('q'):
-
+        gray = cv2.flip(gray, 1)
         gray = cv2.transpose(gray)
         gray = cv2.flip(gray, 0)  # transpose+flip(0)=CCW
         cv2.imwrite(file_names[capture_index], gray)
