@@ -2,58 +2,65 @@ import win32print
 import win32ui
 from PIL import Image, ImageWin
 import cv2
+import numpy as np
+import time
 
+global pic_countdown
+pic_countdown = -1
+def foo(event,x,y,flags,param):
+    if event == cv2.EVENT_LBUTTONDOWN:
+        global pic_countdown
+        if pic_countdown == -1:
+            pic_countdown = 10
+
+
+
+window_name = 'frame'
 file_names = ["filename_0.png", "filename_1.png","filename_2.png","filename_3.png"]
 cam = cv2.VideoCapture(0)
-
+frame = np.zeros((512,512,3), np.uint8)
 capture_index = 0
+
+fontface = cv2.FONT_HERSHEY_SIMPLEX
+fontscale = 1
+fontcolor = (255, 255, 255)
+
+
+cv2.namedWindow(window_name)
+cv2.imshow(window_name, frame)
+cv2.setMouseCallback(window_name, foo)
+
 while(True) :
  # Capture frame-by-frame
     ret, frame = cam.read()
-    # Our operations on the frame come here
-    gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-    gray = cv2.flip(gray, 1)
+    frame = cv2.flip(frame, 1)
+
     # Display the resulting frame
-    cv2.imshow('frame',gray)
-    if cv2.waitKey(1) & 0xFF == ord('q'):
-        gray = cv2.flip(gray, 1)
-        gray = cv2.transpose(gray)
-        gray = cv2.flip(gray, 0)  # transpose+flip(0)=CCW
-        cv2.imwrite(file_names[capture_index], gray)
-        capture_index = capture_index + 1
-        if (capture_index == 4):
-            break
+    if(0 < pic_countdown) :
+        cv2.putText(frame,"Ready?" + str(pic_countdown), (100, 100), fontface, fontscale, fontcolor)
+        pic_countdown = pic_countdown - 1
+    elif(pic_countdown == 0):
+        frame = cv2.flip(frame, 1)
+        file_name = str(time.time()) + ".png"
+        cv2.imwrite(file_name, frame)
+        pic_countdown = pic_countdown - 1
+    else :
+        cv2.putText(frame,"Slaap" + str(pic_countdown), (100,100), fontface, fontscale, fontcolor)
 
-PHYSICALWIDTH = 110
-PHYSICALHEIGHT = 111
-printer_name = win32print.GetDefaultPrinter ()
-
-
-hDC = win32ui.CreateDC ()
-hDC.CreatePrinterDC (printer_name)
-printer_size = hDC.GetDeviceCaps (PHYSICALWIDTH), hDC.GetDeviceCaps (PHYSICALHEIGHT)
-
-#dest_size =
-
-hDC.StartDoc ('tmp.png')
-hDC.StartPage ()
-
-margin = 80
-sizeX = int(frame.shape[0] * 1.8)
-sizeY = int(frame.shape[1] * 1.8)
-print("x: " + str(sizeX) )
-print("y: " + str(sizeY) )
-
-for indexX in range(4):
-    bmp = Image.open (file_names[indexX])
-    dib = ImageWin.Dib(bmp)
-    startX = margin + (indexX * (margin + sizeX))
-    startY = margin
-    endX = (margin + sizeX) + (indexX * (margin + sizeX))
-    endY = (margin + sizeY)
-    dib.draw (hDC.GetHandleOutput (), (startX,startY, endX, endY))
-
-
-hDC.EndPage ()
-hDC.EndDoc ()
-hDC.DeleteDC ()
+    cv2.imshow(window_name, frame)
+    if cv2.waitKey(14) & 0xFF == ord('q'):
+        break
+#
+# cv2.destroyAllWindows()
+# while(True):
+#     ret, frame = cam.read()
+#     if ret==True:
+#         frame = cv2.flip(frame,0)
+#         # write the flipped frame
+#         cv2.imshow(window_name, frame)
+#         cv2.setMouseCallback(window_name, foo)
+#     else:
+#         print('read failed')
+#
+# cv2.namedWindow(window_name)
+# cv2.setMouseCallback(window_name, foo)
